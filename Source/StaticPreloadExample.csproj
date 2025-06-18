@@ -18,6 +18,23 @@
         <Reference Include="Assembly-CSharp">
             <HintPath>$(HollowKnightRefs)/Assembly-CSharp.dll</HintPath>
         </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(HollowKnightRefs)/UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.CoreModule">
+            <HintPath>$(HollowKnightRefs)/UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.InputLegacyModule">
+            <HintPath>$(HollowKnightRefs)/UnityEngine.InputLegacyModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AssetBundleModule">
+            <HintPath>$(HollowKnightRefs)/UnityEngine.AssetBundleModule.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="../Resources/bundle.unity3d" />
+        <Content Include="../Resources/bundle.objects.jsonc" />
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent" Condition="'$(CopyDir)' != ''">
