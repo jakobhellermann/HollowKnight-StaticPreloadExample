@@ -1,30 +1,55 @@
-# Examples
-This directory contains many example mods to show the common uses of the modding api.
-These mods are intended to give beginners a look at how to start to develop mods using this api,
-although proficient knowlege of C# is fairly required.  
+# Static Preload Example Mod
 
-## Setup
-These projects can be built without any additional configuration.
-The modding api project defines a build setting to copy the files into a `HollowKnightManaged` folder
-to set up the references.
-See the [README](../README.md) for setup of the general modding API.
-* To build the project with an IDE, set the `SetupExamples` build property to `true`.  
-* To build the project with the `dotnet` cli, add the `-p:SetupExamples=true` flag to the build command.  
+This is a mod demonstrating the usage of [unity-scene-repacker](https://github.com/jakobhellermann/unity-scene-repacker) with hollow knight.
 
-Alternatively, if you have the latest version of the modding API installed already, you can just create
-the `HollowKnightManaged` folder in this directory and then copy the contents of the `Managed` folder in your
-Hollow Knight install into the `HollowKnightManaged` folder.
+The idea is - instead of doing the regular preloading process at runtime - to repack only the objects from the game you're interested in into an [`AssetBundle`](https://docs.unity3d.com/6000.1/Documentation/Manual/AssetBundlesIntro.html) that you can then load at runtime at a fraction of the cost.
 
-## Example Mods
-The following table of contents is listed in order of complexity, with each example usually building
-on concepts from the previous.
+## Usage
 
-1. [Simple Hooks](./SimpleHooks/SimpleHooks.cs) - A mod that demostrates the basics of creating a mod.  
-    The [`.csproj`](./SimpleHooks/SimpleHooks.csproj) file is a good baseline for the general config file you will
-    find in almost every mod. It defines the reference to the games assemblies in the `HollowKnightManaged` folder
-    (which gets populated using the [Setup](#Setup) step), or a user defined folder by changing the `HollowKnightRefs` tag.
-2. [Custom Save Data](./CustomSaveData/CustomSaveData.cs) - This mod shows how the mod loader can save global
-    and savegame specific data.  
-    This is the main way mods will save persistent data. The relevant save files will be `ModName.GlobalSettings.json` for global data and all save data is stored to
-    `user1.modded.json` for save slot 1, `user2.modded.json` for save slot 2, etc.
+In [Resources/bundle.objects.jsonc](./Resources/bundle.objects.jsonc) you can find the definition of objects you want to load:
 
+```jsonc
+{
+ "Fungus1_01": [
+  "Moss Walker (3)",
+  "Plant Trap",
+  "Mossman_Shaker (1)",
+  "Pigeon (1)",
+  "Mossman_Runner"
+ ],
+ "Dream_Final_Boss": [
+  "Boss Control/Radiance"
+ ],
+}
+```
+
+To generate the assetbundle in [Resources/bundle.unity3d](./Resources/bundle.unity3d), simply run
+
+```sh
+uvx unity-scene-repacker \
+    --steam-game "Hollow Knight"
+    --objects "Resources/bundle.objects.jsonc" \
+    --output Resources/bundle.unity3d \
+    --bundlename examplemod
+```
+or `just` to run from the [`justfile`](./just) if you have [just](https://github.com/casey/just) installed.
+
+If you don't have [uv](https://astral.sh/blog/uv), you can also compile and install the tool from source using `cargo install --git https://github.com/jakobhellermann/unity-scene-repacker`.
+
+```sh
+ℹ Detected game 'Hollow Knight' at '/home/jakob/.local/share/Steam/steamapps/common/Hollow Knight'
+ℹ Repacking 325 objects in 158 scenes
+ℹ Pruned 761244 -> 16364 objects
+ℹ 362.52 MiB -> 20.70 MiB raw size
+
+✔ Repacked into Resources/bundle.unity3d (5.88 MiB) in 491.13ms
+```
+
+The bundle is embedded into the mod dll using
+```xml
+<ItemGroup>
+    <EmbeddedResource Include="../Resources/bundle.unity3d" />
+</ItemGroup>
+```
+
+The [`BundleSpawner`](./Source/BundleSpawner.cs) file shows an example of loading the object and consecutively spawning every object contained in it, but you're flexible in when and how you use the bundle.
